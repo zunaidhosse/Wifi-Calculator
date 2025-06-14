@@ -135,9 +135,8 @@
             font-weight: bold;
         }
         
-        /* নতুন ইনস্টল বাটনের জন্য স্টাইল */
         .install-button {
-            margin-bottom: 20px; /* Added margin */
+            margin-bottom: 20px;
         }
 
         .hidden {
@@ -214,7 +213,6 @@
             </div>
         </div>
         
-        <!-- ইনস্টল করার বাটন এখানে যোগ করা হয়েছে -->
         <button id="installAppBtn" class="install-button hidden">Install App</button>
 
         <label for="width" id="widthLabel">Width</label>
@@ -358,21 +356,35 @@
             }
             document.getElementById('buttonResult').textContent = buttonMessage;
         }
-
+        
+        // --- QR Code Generation Function (Corrected and Resized) ---
         function generateQR() {
-            const whatsappUrl = "https://wa.me/+9660581991368";
-            const qr = qrcode(0, 'M');
-            qr.addData(whatsappUrl);
-            qr.make();
-            const qrDiv = document.getElementById('qrcode');
-            qrDiv.innerHTML = qr.createSvgTag({
-                scalable: true
-            });
+            // আপনার ওয়েবসাইটের URL এখানে দেওয়া হয়েছে
+            const appUrl = "https://zunaidhosse.github.io/Wifi-Calculator/";
+            try {
+                const qr = qrcode(0, 'M');
+                qr.addData(appUrl);
+                qr.make();
+
+                const qrDiv = document.getElementById('qrcode');
+                // QR কোডের আকার ছোট করার জন্য createSvgTag এর প্যারামিটার কমানো হয়েছে
+                qrDiv.innerHTML = qr.createSvgTag(5); // আগের 6 থেকে 5 করা হয়েছে
+
+                const svg = qrDiv.querySelector('svg');
+                if(svg) {
+                    // নির্দিষ্ট আকার সেট করা হয়েছে
+                    svg.style.width = '120px';
+                    svg.style.height = '120px';
+                }
+            } catch (error) {
+                console.error("Failed to generate QR code:", error);
+                document.getElementById('qrcode').textContent = "QR Code could not be generated.";
+            }
         }
         
         window.onload = function() {
             generateQR();
-            changeLanguage('bn'); // ডিফল্ট ভাষা বাংলা সেট করা হলো
+            changeLanguage('bn');
         }
 
         // --- PWA Installation Logic ---
