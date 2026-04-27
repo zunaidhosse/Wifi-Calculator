@@ -1,9 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="100" fill="#4a90e2"/>
-  <rect x="120" y="120" width="272" height="272" rx="20" fill="white" opacity="0.2"/>
-  <path d="M160 180h192v152H160z" fill="white"/>
-  <rect x="160" y="360" width="30" height="30" rx="5" fill="white"/>
-  <rect x="214" y="360" width="30" height="30" rx="5" fill="white"/>
-  <rect x="268" y="360" width="30" height="30" rx="5" fill="white"/>
-  <rect x="322" y="360" width="30" height="30" rx="5" fill="white"/>
+  <defs>
+    <clipPath id="circleView">
+      <circle cx="256" cy="256" r="236" />
+    </clipPath>
+  </defs>
+  
+  <!-- Outer Border -->
+  <circle cx="256" cy="256" r="246" fill="white" stroke="#c00" stroke-width="20" />
+  
+  <g clip-path="url(#circleView)">
+    <!-- Fan/Curtain Shape (Pink) -->
+    <path d="M50 256 L150 100 L250 80 L200 150 L250 200 L180 256 L250 312 L200 362 L250 432 L150 412 Z" fill="#e91e63" />
+    
+    <!-- Fan radiating rays -->
+    <path d="M50 256 L300 50 M50 256 L350 150 M50 256 L350 362 M50 256 L300 462" stroke="white" stroke-width="4" />
+    
+    <circle cx="50" cy="256" r="20" fill="#e91e63" />
+  </g>
+
+  <!-- Text -->
+  <text x="280" y="280" font-family="Arial, sans-serif" font-size="80" font-weight="bold" fill="white" stroke="#e91e63" stroke-width="2" text-anchor="middle">Zunaid</text>
 </svg>
