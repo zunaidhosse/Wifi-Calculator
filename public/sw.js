@@ -1,9 +1,9 @@
-const CACHE_NAME = 'wifi-calc-v3';
+const CACHE_NAME = 'wifi-calc-v4';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icon.svg'
+  '/app-icon.svg'
 ];
 
 self.addEventListener('install', event => {

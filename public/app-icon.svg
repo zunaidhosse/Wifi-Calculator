@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <clipPath id="circleView">
+      <circle cx="256" cy="256" r="230" />
+    </clipPath>
+  </defs>
+  
+  <!-- White Background -->
+  <circle cx="256" cy="256" r="256" fill="white" />
+  
+  <!-- Red Thick Border (Matches Screenshot) -->
+  <circle cx="256" cy="256" r="236" fill="none" stroke="#b91c1c" stroke-width="24" />
+  
+  <g clip-path="url(#circleView)">
+    <!-- Pink Radiating Curtain/Fan Shape on the Left -->
+    <g fill="#ec4899">
+      <path d="M80,256 L280,40 L340,80 L80,256 Z" opacity="0.9" />
+      <path d="M80,256 L340,120 L380,180 L80,256 Z" opacity="0.8" />
+      <path d="M80,256 L380,220 L380,292 L80,256 Z" opacity="0.7" />
+      <path d="M80,256 L380,332 L340,392 L80,256 Z" opacity="0.8" />
+      <path d="M80,256 L280,472 L80,256 Z" opacity="0.9" />
+      
+      <!-- Center hub of the fan -->
+      <circle cx="80" cy="256" r="30" />
+    </g>
+    
+    <!-- "Zunaid" Text -->
+    <text x="320" y="290" font-family="Verdana, sans-serif" font-size="90" font-weight="900" fill="none" stroke="#ec4899" stroke-width="4" text-anchor="middle" letter-spacing="-2">Zunaid</text>
+    <text x="320" y="290" font-family="Verdana, sans-serif" font-size="90" font-weight="900" fill="white" text-anchor="middle" letter-spacing="-2">Zunaid</text>
+  </g>
+</svg>
