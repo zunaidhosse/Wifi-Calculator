@@ -328,8 +328,13 @@ export default function App() {
         {/* Header Section */}
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-bg-neumorphic shadow-outer flex items-center justify-center">
-              <Calculator className="text-primary w-6 h-6" />
+            <div className="w-16 h-16 rounded-full bg-white shadow-outer flex items-center justify-center overflow-hidden border-2 border-primary/20">
+              <img 
+                src="/logo.png" 
+                alt="Zunaid Logo" 
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
             </div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-slate-800 uppercase">{texts.title}</h1>
@@ -682,11 +687,21 @@ export default function App() {
               </div>
 
               <footer className="mt-8 pt-6 border-t border-slate-300 flex flex-col sm:flex-row justify-between gap-4">
-                <div className="flex flex-col gap-4 w-full sm:w-auto">
-                  <div className="text-center sm:text-left">
+                <div className="flex items-center gap-4 w-full sm:w-auto">
+                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
+                    <img 
+                      src="/profile.png" 
+                      alt="Zunaid's Profile" 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <div className="text-left">
                     <p className="text-[10px] font-bold text-slate-400 uppercase">Designer Credit</p>
                     <p className="text-xs font-bold text-slate-600">{texts.designer}</p>
                   </div>
+                </div>
+                <div className="flex flex-col gap-4 w-full sm:w-auto">
                   <button 
                     onClick={downloadImage}
                     className={cn(
