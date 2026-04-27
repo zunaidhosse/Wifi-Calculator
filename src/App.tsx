@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Languages, Smartphone, Calculator, CheckCircle2, Download, MoreVertical, Share2, ExternalLink, X, ChevronRight } from 'lucide-react';
+import { Languages, Smartphone, Calculator, CheckCircle2, Download, MoreVertical, Share2, ExternalLink, X, ChevronRight, History, Trash2, DollarSign } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -34,7 +34,16 @@ const translations = {
     share: "Share App",
     changeLang: "Language",
     alert: "Please enter valid positive numbers. If the issue persists, contact me directly on WhatsApp: +9660581991368\n(Name: Zunaid Hossen Meraj).",
-    designer: "Designed by ZunaidHossen Miraz"
+    designer: "Designed by ZunaidHossen Miraz",
+    pricePerMeter: "Price per Meter",
+    totalCost: "Total Cost",
+    history: "History",
+    clearHistory: "Clear History",
+    noHistory: "No history yet",
+    currency: "SAR",
+    feet: "Feet",
+    inches: "Inches",
+    units: "Units"
   },
   bn: {
     title: "ওয়াইফাই ক্যালকুলেটর",
@@ -59,7 +68,16 @@ const translations = {
     share: "অ্যাপ শেয়ার",
     changeLang: "ভাষা",
     alert: "অনুগ্রহ করে সঠিক ধনাত্মক সংখ্যা প্রবেশ করান। সমস্যা থাকলে, আমার সাথে সরাসরি WhatsApp এ যোগাযোগ করুন: +9660581991368\n(নাম: জুনাইদ হোসেন মিরাজ)।",
-    designer: "ডিজাইন করেছেন জুনাইদ হোসেন মিরাজ"
+    designer: "ডিজাইন করেছেন জুনাইদ হোসেন মিরাজ",
+    pricePerMeter: "প্রতি মিটার মূল্য",
+    totalCost: "মোট খরচ",
+    history: "ইতিহাস",
+    clearHistory: "ইতিহাস মুছুন",
+    noHistory: "এখনও কোন ইতিহাস নেই",
+    currency: "রিয়াল",
+    feet: "ফুট",
+    inches: "ইঞ্চি",
+    units: "একক"
   },
   ar: {
     title: "حاسبة الواي فاي",
@@ -84,11 +102,41 @@ const translations = {
     share: "مشاركة التطبيق",
     changeLang: "اللغة",
     alert: "الرجاء إدخال أرقام موجبة صحيحة. إذا استمرت المشكلة، تواصل معي مباشرة على WhatsApp: +9660581991368\n(الاسم: زنيد حسين ميراج).",
-    designer: "تم التصميم بواسطة جنيد حسين ميراج"
+    designer: "تم التصميم بواسطة جنيد حسين ميراج",
+    pricePerMeter: "سعر المتر",
+    totalCost: "إجمالي التكلفة",
+    history: "السجل",
+    clearHistory: "مسح السجل",
+    noHistory: "لا يوجد سجل بعد",
+    currency: "ر.س",
+    feet: "قدم",
+    inches: "بوصة",
+    units: "الوحدات"
   }
 };
 
 type Language = keyof typeof translations;
+
+interface HistoryItem {
+  id: string;
+  timestamp: number;
+  side: string;
+  totalMeasure: string;
+  inputs: {
+    width: string;
+    multiplier: string;
+    isDoublePart: boolean;
+    isNoJoin: boolean;
+    pricePerMeter: string;
+  };
+  results: {
+    cloth: string;
+    parts: number;
+    totalWithMultiplier: string;
+    buttons: number;
+    totalCost: string | null;
+  };
+}
 
 export default function App() {
   const [lang, setLang] = useState<Language>(() => {
@@ -98,17 +146,25 @@ export default function App() {
   const [width, setWidth] = useState<string>('1.40');
   const [side, setSide] = useState<string>('');
   const [multiplier, setMultiplier] = useState<string>('');
+  const [pricePerMeter, setPricePerMeter] = useState<string>('');
+  const [showPriceInput, setShowPriceInput] = useState<boolean>(false);
   const [isDoublePart, setIsDoublePart] = useState<boolean>(false);
   const [isNoJoin, setIsNoJoin] = useState<boolean>(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+  const [history, setHistory] = useState<HistoryItem[]>(() => {
+    const saved = localStorage.getItem('app-history');
+    return saved ? JSON.parse(saved) : [];
+  });
   
   const [results, setResults] = useState<{
     cloth: string;
     parts: number;
     totalWithMultiplier: string;
     buttons: number;
+    totalCost: string | null;
   } | null>(null);
 
   const [installPrompt, setInstallPrompt] = useState<any>(null);
@@ -117,6 +173,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('app-language', lang);
   }, [lang]);
+
+  useEffect(() => {
+    localStorage.setItem('app-history', JSON.stringify(history));
+  }, [history]);
 
   useEffect(() => {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -141,6 +201,7 @@ export default function App() {
     const w = parseFloat(width);
     const s = parseFloat(side);
     const m = parseFloat(multiplier);
+    const p = parseFloat(pricePerMeter);
     const texts = translations[lang];
 
     if (isNaN(s) || s <= 0) {
@@ -153,35 +214,73 @@ export default function App() {
       ? Math.ceil((buttonsPerMeter / 2) / 2) * 2 
       : Math.ceil(buttonsPerMeter / 2) * 2;
 
+    let totalWithMultiplierStr: string;
+    let partsCount = 0;
+    let totalClothStr = '0.00';
+
     if (isNoJoin) {
-      setResults({
-        cloth: '0.00',
-        parts: 0,
-        totalWithMultiplier: (s * 3.10).toFixed(2),
-        buttons: btns
-      });
-      return;
+      totalWithMultiplierStr = (s * 3.10).toFixed(2);
+    } else {
+      if (isNaN(w) || w <= 0 || isNaN(m) || m <= 0) {
+        alert(texts.alert);
+        return;
+      }
+      const clothForSide = s * 3;
+      partsCount = Math.ceil(clothForSide / w);
+      totalClothStr = (partsCount * w).toFixed(2);
+      const addition = partsCount * 0.07;
+      totalWithMultiplierStr = ((partsCount * m) + addition).toFixed(2);
     }
 
-    if (isNaN(w) || w <= 0 || isNaN(m) || m <= 0) {
-      alert(texts.alert);
-      return;
-    }
+    const calculatedCost = !isNaN(p) && p > 0 ? (parseFloat(totalClothStr === '0.00' ? totalWithMultiplierStr : totalClothStr) * p).toFixed(2) : null;
 
-    const clothForSide = s * 3;
-    const partsCount = Math.ceil(clothForSide / w);
-    const totalCloth = partsCount * w;
-    
-    // Total Measurement = (Parts * Multiplier) + (Parts * 7cm if not No Join)
-    const addition = isNoJoin ? 0 : (partsCount * 0.07);
-    const totalWithMultiplier = (partsCount * m) + addition;
-
-    setResults({
-      cloth: totalCloth.toFixed(2),
+    const calculatedResults = {
+      cloth: totalClothStr,
       parts: partsCount,
-      totalWithMultiplier: totalWithMultiplier.toFixed(2),
-      buttons: btns
-    });
+      totalWithMultiplier: totalWithMultiplierStr,
+      buttons: btns,
+      totalCost: calculatedCost
+    };
+
+    setResults(calculatedResults);
+
+    // Save to history
+    const historyItem: HistoryItem = {
+      id: Math.random().toString(36).substr(2, 9),
+      timestamp: Date.now(),
+      side,
+      totalMeasure: totalWithMultiplierStr,
+      inputs: {
+        width,
+        multiplier,
+        isDoublePart,
+        isNoJoin,
+        pricePerMeter
+      },
+      results: calculatedResults
+    };
+
+    setHistory(prev => [historyItem, ...prev].slice(0, 10));
+  };
+
+  const loadHistoryItem = (item: HistoryItem) => {
+    setSide(item.side);
+    setWidth(item.inputs.width);
+    setMultiplier(item.inputs.multiplier);
+    setIsDoublePart(item.inputs.isDoublePart);
+    setIsNoJoin(item.inputs.isNoJoin);
+    setPricePerMeter(item.inputs.pricePerMeter);
+    setResults(item.results);
+    setShowHistoryModal(false);
+  };
+
+  const clearHistory = () => {
+    setHistory([]);
+    localStorage.removeItem('app-history');
+  };
+
+  const deleteHistoryItem = (id: string) => {
+    setHistory(prev => prev.filter(item => item.id !== id));
   };
 
   const downloadImage = async () => {
@@ -389,6 +488,40 @@ export default function App() {
                             </div>
                           </button>
 
+                          <button
+                            onClick={() => {
+                              setShowHistoryModal(true);
+                              setIsMenuOpen(false);
+                            }}
+                            className="w-full text-left px-6 py-5 hover:bg-black/5 transition-colors flex items-center gap-4 border-t border-slate-200"
+                          >
+                            <div className="w-10 h-10 rounded-xl surface-inset flex items-center justify-center">
+                              <History size={20} className="text-primary" />
+                            </div>
+                            <span className="text-sm font-bold uppercase tracking-wider text-slate-600">{texts.history}</span>
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setShowPriceInput(!showPriceInput);
+                              setIsMenuOpen(false);
+                            }}
+                            className="w-full text-left px-6 py-5 hover:bg-black/5 transition-colors flex items-center justify-between group border-t border-slate-200"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 rounded-xl surface-inset flex items-center justify-center">
+                                <DollarSign size={20} className="text-primary" />
+                              </div>
+                              <span className="text-sm font-bold uppercase tracking-wider text-slate-600">{texts.pricePerMeter}</span>
+                            </div>
+                            <div className={cn(
+                              "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors",
+                              showPriceInput ? "bg-primary border-primary" : "border-slate-300"
+                            )}>
+                              {showPriceInput && <CheckCircle2 size={12} className="text-white" />}
+                            </div>
+                          </button>
+
                           <a
                             href="https://zunaidhosse.github.io/My-contact/"
                             target="_blank"
@@ -453,6 +586,99 @@ export default function App() {
           </div>
         </header>
 
+        {/* History Modal */}
+        <AnimatePresence>
+          {showHistoryModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                onClick={() => setShowHistoryModal(false)}
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="relative w-full max-w-md surface-card p-8 rounded-[32px] shadow-2xl flex flex-col h-[80vh] max-h-[600px]"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-bg-neumorphic shadow-outer flex items-center justify-center">
+                      <History className="text-primary w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-800 uppercase tracking-tight">{texts.history}</h3>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recent Calculations</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowHistoryModal(false)}
+                    className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="flex-grow overflow-y-auto pr-2 space-y-4 custom-scrollbar">
+                  {history.length > 0 ? (
+                    history.map((item) => (
+                      <div key={item.id} className="group relative">
+                        <button 
+                          onClick={() => loadHistoryItem(item)}
+                          className="w-full p-4 rounded-2xl surface-inset flex items-center justify-between text-left transition-all hover:bg-primary/5 hover:border-primary/20 border border-transparent"
+                        >
+                          <div className="flex flex-col">
+                            <div className="flex items-baseline gap-2">
+                               <span className="text-lg font-mono font-bold text-slate-700">{item.totalMeasure}</span>
+                               <span className="text-[10px] font-bold text-slate-400 uppercase">{texts.meters}</span>
+                            </div>
+                            <div className="flex items-center gap-3 mt-1">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase">Side: {item.side}m</span>
+                              <span className="text-[10px] font-bold text-slate-300">•</span>
+                              <span className="text-[10px] font-bold text-slate-400 uppercase">{new Date(item.timestamp).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="p-2 rounded-lg bg-bg-neumorphic shadow-outer-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                            <ChevronRight size={14} className="text-primary" />
+                          </div>
+                        </button>
+                        
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteHistoryItem(item.id);
+                          }}
+                          className="absolute top-1/2 -right-2 -translate-y-1/2 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-slate-100"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3">
+                      <History size={48} className="opacity-10" />
+                      <p className="text-xs font-bold uppercase tracking-widest">{texts.noHistory}</p>
+                    </div>
+                  )}
+                </div>
+
+                {history.length > 0 && (
+                  <button 
+                    onClick={clearHistory}
+                    className="mt-6 w-full py-4 rounded-2xl surface-card text-xs font-bold text-red-500 uppercase tracking-widest hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Trash2 size={16} />
+                    {texts.clearHistory}
+                  </button>
+                )}
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
         {/* Share Modal */}
         <AnimatePresence>
           {showShareModal && (
@@ -486,7 +712,7 @@ export default function App() {
                 
                 <div className="p-6 bg-white rounded-3xl shadow-inset-sm mb-8">
                   <QRCodeSVG 
-                    value="https://wifi-calculator1.vercel.app/" 
+                    value="https://wifi-calculator.vercel.app/" 
                     size={200}
                     level="H"
                     includeMargin={false}
@@ -494,7 +720,7 @@ export default function App() {
                 </div>
                 
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter max-w-[200px]">
-                  wifi-calculator1.vercel.app
+                  wifi-calculator.vercel.app
                 </p>
               </motion.div>
             </div>
@@ -550,8 +776,10 @@ export default function App() {
                   )}
                 </AnimatePresence>
 
-                <div>
-                  <label className="label-caps">{texts.sideLength} (m)</label>
+                <div className="pt-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="label-caps">{texts.sideLength} (m)</label>
+                  </div>
                   <input 
                     type="number" 
                     value={side} 
@@ -571,6 +799,29 @@ export default function App() {
                     className="w-full h-12 px-4 rounded-xl surface-inset text-lg font-mono text-slate-600 placeholder:text-slate-300 outline-none"
                   />
                 </div>
+
+                <AnimatePresence>
+                  {showPriceInput && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <label className="label-caps">{texts.pricePerMeter} ({texts.currency})</label>
+                      <div className="relative">
+                        <input 
+                          type="number" 
+                          value={pricePerMeter} 
+                          onChange={(e) => setPricePerMeter(e.target.value)}
+                          placeholder="0.00"
+                          className="w-full h-12 pl-10 pr-4 rounded-xl surface-inset text-lg font-mono text-slate-600 placeholder:text-slate-300 outline-none"
+                        />
+                        <DollarSign size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <div className="flex items-center justify-center gap-6 py-2">
                   <button 
@@ -631,6 +882,21 @@ export default function App() {
                     </motion.div>
                   )}
                   
+                  {results?.totalCost && (
+                    <motion.div 
+                      key={results.totalCost}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex flex-col justify-center p-6 surface-inset-sm min-h-[120px] bg-primary/5"
+                    >
+                      <span className="label-caps">{texts.totalCost}</span>
+                      <span className="text-4xl font-light text-primary">
+                        <strong className="font-bold">{results.totalCost}</strong> <small className="text-xl">{texts.currency}</small>
+                      </span>
+                      <span className="text-[10px] font-bold text-primary/60 uppercase mt-2">Estimative Calculation</span>
+                    </motion.div>
+                  )}
+                  
                   <motion.div 
                     key={results?.buttons}
                     initial={{ opacity: 0 }}
@@ -665,7 +931,7 @@ export default function App() {
 
                       <div className="hidden md:block pt-4">
                         <QRCodeSVG 
-                          value="https://wifi-calculator1.vercel.app/" 
+                          value="https://wifi-calculator.vercel.app/" 
                           size={60}
                           level="M"
                           includeMargin={false}
