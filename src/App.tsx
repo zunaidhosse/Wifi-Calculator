@@ -218,21 +218,24 @@ export default function App() {
     let partsCount = 0;
     let totalClothStr = '0.00';
 
-    if (isNoJoin) {
-      totalWithMultiplierStr = (s * 3.10).toFixed(2);
-    } else {
-      if (isNaN(w) || w <= 0 || isNaN(m) || m <= 0) {
+    // Core Calculation based on user example: Side * Multiplier = Total Meters
+    totalWithMultiplierStr = (s * m).toFixed(2);
+
+    if (!isNoJoin) {
+      if (isNaN(w) || w <= 0) {
         alert(texts.alert);
         return;
       }
-      const clothForSide = s * 3;
-      partsCount = Math.ceil(clothForSide / w);
+      // Technical parts calculation for tailoring
+      const clothNeededForFullness = s * 3; // Standard 3x fullness for parts
+      partsCount = Math.ceil(clothNeededForFullness / w);
       totalClothStr = (partsCount * w).toFixed(2);
-      const addition = partsCount * 0.07;
-      totalWithMultiplierStr = ((partsCount * m) + addition).toFixed(2);
+    } else {
+      totalClothStr = '0.00';
     }
 
-    const calculatedCost = !isNaN(p) && p > 0 ? (parseFloat(totalClothStr === '0.00' ? totalWithMultiplierStr : totalClothStr) * p).toFixed(2) : null;
+    // Cost Calculation: Measured Meters * Price
+    const calculatedCost = !isNaN(p) && p > 0 ? (s * m * p).toFixed(2) : null;
 
     const calculatedResults = {
       cloth: totalClothStr,
@@ -280,7 +283,40 @@ export default function App() {
   };
 
   const deleteHistoryItem = (id: string) => {
-    setHistory(prev => prev.filter(item => item.id !== id));
+    if (window.confirm('Are you sure you want to delete this calculation?')) {
+      setHistory(prev => prev.filter(item => item.id !== id));
+    }
+  };
+
+  const [historySearch, setHistorySearch] = useState('');
+
+  const filteredHistory = history.filter(item => 
+    item.totalMeasure.includes(historySearch) || 
+    item.side.includes(historySearch)
+  );
+
+  const getGroupedHistory = () => {
+    const groups: { [key: string]: HistoryItem[] } = {};
+    filteredHistory.forEach(item => {
+      const date = new Date(item.timestamp);
+      let day: string;
+      
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+
+      if (date.toDateString() === today.toDateString()) {
+        day = lang === 'bn' ? 'আজ' : lang === 'ar' ? 'اليوم' : 'Today';
+      } else if (date.toDateString() === yesterday.toDateString()) {
+        day = lang === 'bn' ? 'গতকাল' : lang === 'ar' ? 'أمس' : 'Yesterday';
+      } else {
+        day = date.toLocaleDateString(lang === 'bn' ? 'bn-BD' : lang === 'ar' ? 'ar-SA' : 'en-US', { day: 'numeric', month: 'long' });
+      }
+
+      if (!groups[day]) groups[day] = [];
+      groups[day].push(item);
+    });
+    return groups;
   };
 
   const downloadImage = async () => {
@@ -589,90 +625,136 @@ export default function App() {
         {/* History Modal */}
         <AnimatePresence>
           {showHistoryModal && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-12">
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/60 backdrop-blur-md"
                 onClick={() => setShowHistoryModal(false)}
               />
               <motion.div 
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                initial={{ opacity: 0, scale: 0.95, y: 40 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative w-full max-w-md surface-card p-8 rounded-[32px] shadow-2xl flex flex-col h-[80vh] max-h-[600px]"
+                exit={{ opacity: 0, scale: 0.95, y: 40 }}
+                className="relative w-full max-w-xl surface-card p-4 sm:p-8 rounded-[40px] shadow-2xl flex flex-col h-[85vh] max-h-[750px] border border-white/20"
               >
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-bg-neumorphic shadow-outer flex items-center justify-center">
-                      <History className="text-primary w-5 h-5" />
+                <div className="flex items-center justify-between mb-6 px-2">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-bg-neumorphic shadow-outer flex items-center justify-center">
+                      <History className="text-primary w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-slate-800 uppercase tracking-tight">{texts.history}</h3>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recent Calculations</p>
+                      <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight leading-none mb-1">{texts.history}</h3>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Intelligent Log • {history.length} Saved</p>
                     </div>
                   </div>
                   <button 
                     onClick={() => setShowHistoryModal(false)}
-                    className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
+                    className="w-10 h-10 rounded-full surface-card flex items-center justify-center text-slate-400 hover:text-primary transition-all hover:rotate-90 active:scale-90"
                   >
                     <X size={20} />
                   </button>
                 </div>
 
-                <div className="flex-grow overflow-y-auto pr-2 space-y-4 custom-scrollbar">
+                {/* Search Bar */}
+                <div className="mb-6 px-2">
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      value={historySearch}
+                      onChange={(e) => setHistorySearch(e.target.value)}
+                      placeholder={lang === 'bn' ? "খুঁজুন (মিটার বা দৈর্ঘ্য)..." : "Search calculations..."}
+                      className="w-full h-12 pl-12 pr-4 rounded-2xl surface-inset text-sm font-bold text-slate-600 placeholder:text-slate-300 outline-none focus:ring-2 ring-primary/20 transition-all"
+                    />
+                    <ChevronRight size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary opacity-40 rotate-90" />
+                  </div>
+                </div>
+
+                <div className="flex-grow overflow-y-auto px-2 space-y-8 custom-scrollbar pb-6">
                   {history.length > 0 ? (
-                    history.map((item) => (
-                      <div key={item.id} className="group relative">
-                        <button 
-                          onClick={() => loadHistoryItem(item)}
-                          className="w-full p-4 rounded-2xl surface-inset flex items-center justify-between text-left transition-all hover:bg-primary/5 hover:border-primary/20 border border-transparent"
-                        >
-                          <div className="flex flex-col">
-                            <div className="flex items-baseline gap-2">
-                               <span className="text-lg font-mono font-bold text-slate-700">{item.totalMeasure}</span>
-                               <span className="text-[10px] font-bold text-slate-400 uppercase">{texts.meters}</span>
+                    Object.entries(getGroupedHistory()).map(([group, items]) => (
+                      <div key={group} className="space-y-4">
+                        <h4 className="sticky top-0 bg-bg-neumorphic/95 backdrop-blur-sm py-2 px-1 text-[10px] font-black text-primary uppercase tracking-[0.3em] z-10">{group}</h4>
+                        <div className="space-y-3">
+                          {items.map((item) => (
+                            <div key={item.id} className="group relative">
+                              <button 
+                                onClick={() => loadHistoryItem(item)}
+                                className="w-full p-5 rounded-3xl surface-inset flex flex-col sm:flex-row items-center justify-between text-left transition-all hover:bg-white/40 border border-transparent hover:border-primary/20 group-hover:shadow-lg active:scale-[0.98]"
+                              >
+                                <div className="flex flex-col gap-2 w-full sm:w-auto">
+                                  <div className="flex items-baseline gap-2">
+                                     <span className="text-2xl font-black text-slate-800 tracking-tighter">{item.totalMeasure}</span>
+                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{texts.meters}</span>
+                                     {item.results.totalCost && (
+                                       <span className="ml-2 px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase">
+                                          {item.results.totalCost} {texts.currency}
+                                       </span>
+                                     )}
+                                  </div>
+                                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                                    <div className="flex items-center gap-1">
+                                      <div className="w-3 h-3 rounded-full bg-slate-300 flex items-center justify-center"><div className="w-1 h-1 bg-white" /></div>
+                                      <span className="text-[10px] font-bold text-slate-500 uppercase">Side: {item.side}m</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <div className="w-3 h-3 rounded-full bg-slate-300 flex items-center justify-center"><div className="w-1 h-1 bg-white" /></div>
+                                      <span className="text-[10px] font-bold text-slate-500 uppercase">Mult: x{item.inputs.multiplier}</span>
+                                    </div>
+                                    {item.inputs.pricePerMeter && (
+                                      <div className="flex items-center gap-1">
+                                        <div className="w-3 h-3 rounded-full bg-slate-300 flex items-center justify-center"><div className="w-1 h-1 bg-white" /></div>
+                                        <span className="text-[10px] font-bold text-slate-500 uppercase">Price: {item.inputs.pricePerMeter}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                
+                                <div className="hidden sm:flex p-3 rounded-2xl surface-card text-primary opacity-40 group-hover:opacity-100 transition-all group-hover:translate-x-1">
+                                  <ChevronRight size={18} />
+                                </div>
+                              </button>
+                              
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteHistoryItem(item.id);
+                                }}
+                                className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white shadow-xl flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-slate-100 scale-90 active:scale-110"
+                              >
+                                <Trash2 size={14} />
+                              </button>
                             </div>
-                            <div className="flex items-center gap-3 mt-1">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase">Side: {item.side}m</span>
-                              <span className="text-[10px] font-bold text-slate-300">•</span>
-                              <span className="text-[10px] font-bold text-slate-400 uppercase">{new Date(item.timestamp).toLocaleDateString()}</span>
-                            </div>
-                          </div>
-                          
-                          <div className="p-2 rounded-lg bg-bg-neumorphic shadow-outer-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                            <ChevronRight size={14} className="text-primary" />
-                          </div>
-                        </button>
-                        
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteHistoryItem(item.id);
-                          }}
-                          className="absolute top-1/2 -right-2 -translate-y-1/2 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 z-10 border border-slate-100"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                          ))}
+                        </div>
                       </div>
                     ))
                   ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3">
-                      <History size={48} className="opacity-10" />
-                      <p className="text-xs font-bold uppercase tracking-widest">{texts.noHistory}</p>
+                    <div className="h-full min-h-[300px] flex flex-col items-center justify-center text-slate-300 gap-6">
+                      <div className="w-24 h-24 rounded-full surface-inset flex items-center justify-center">
+                        <History size={40} className="opacity-20" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs font-black uppercase tracking-[0.3em] mb-1">{texts.noHistory}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Start calculating to build your log</p>
+                      </div>
                     </div>
                   )}
                 </div>
 
-                {history.length > 0 && (
-                  <button 
-                    onClick={clearHistory}
-                    className="mt-6 w-full py-4 rounded-2xl surface-card text-xs font-bold text-red-500 uppercase tracking-widest hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Trash2 size={16} />
-                    {texts.clearHistory}
-                  </button>
+                {history.length > 0 && !historySearch && (
+                  <div className="mt-4 px-2">
+                    <button 
+                      onClick={() => {
+                        if (window.confirm('Delete all history items?')) clearHistory();
+                      }}
+                      className="w-full py-4 rounded-3xl surface-card text-[10px] font-black text-red-500 uppercase tracking-[0.2em] hover:bg-red-50 transition-all active:scale-[0.98] flex items-center justify-center gap-3 border border-red-100"
+                    >
+                      <Trash2 size={16} />
+                      {texts.clearHistory}
+                    </button>
+                  </div>
                 )}
               </motion.div>
             </div>
