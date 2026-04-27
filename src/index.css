@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-neumorphic: #e0e5ec;
+  --color-shadow-dark: #bec3c9;
+  --color-shadow-light: #ffffff;
+  --color-primary: #4a90e2;
+  
+  --shadow-outer: 8px 8px 16px var(--color-shadow-dark), -8px -8px 16px var(--color-shadow-light);
+  --shadow-outer-lg: 12px 12px 24px var(--color-shadow-dark), -12px -12px 24px var(--color-shadow-light);
+  --shadow-outer-sm: 4px 4px 10px var(--color-shadow-dark), -4px -4px 10px var(--color-shadow-light);
+  --shadow-inset: inset 4px 4px 8px var(--color-shadow-dark), inset -4px -4px 8px var(--color-shadow-light);
+  --shadow-inset-sm: inset 2px 2px 5px var(--color-shadow-dark), inset -2px -2px 5px var(--color-shadow-light);
+}
+
+@layer base {
+  body {
+    @apply bg-bg-neumorphic text-slate-700 font-sans antialiased min-h-screen;
+  }
+}
+
+.surface-card {
+  @apply bg-bg-neumorphic rounded-3xl shadow-outer;
+}
+
+.surface-inset {
+  @apply bg-bg-neumorphic rounded-xl shadow-inset;
+}
+
+.surface-inset-sm {
+  @apply bg-bg-neumorphic rounded-2xl shadow-inset-sm;
+}
+
+.btn-primary {
+  @apply w-full py-5 rounded-2xl bg-primary text-white font-bold uppercase tracking-[0.2em] shadow-[4px_4px_10px_rgba(74,144,226,0.4)] transition-all hover:brightness-110 active:scale-[0.98];
+}
+
+.label-caps {
+  @apply block text-[10px] font-bold uppercase tracking-widest mb-2 text-slate-400;
+}
