@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Languages, Smartphone, Calculator, CheckCircle2, Download, MoreVertical, Share2, ExternalLink, X, ChevronRight } from 'lucide-react';
+import { Languages, Smartphone, Calculator, CheckCircle2, Download, MoreVertical, Share2, ExternalLink, X, ChevronRight, Phone, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -31,6 +31,10 @@ const translations = {
     pairs: "pairs",
     more: "More",
     helpline: "Helpline",
+    onlineShop: "Online Shop",
+    supportAndInfo: "Support & Info",
+    contactDescription: "Contact us directly",
+    shopDescription: "Our furniture shop",
     share: "Share App",
     changeLang: "Language",
     alert: "Please enter valid positive numbers. If the issue persists, contact me directly on WhatsApp: +9660581991368\n(Name: Zunaid Hossen Meraj).",
@@ -56,6 +60,10 @@ const translations = {
     pairs: "পেয়ার",
     more: "আরও",
     helpline: "হেল্পলাইন",
+    onlineShop: "অনলাইন শপ",
+    supportAndInfo: "সহযোগিতা ও তথ্য",
+    contactDescription: "সরাসরি যোগাযোগ করুন",
+    shopDescription: "আমাদের ফার্নিচার শপ",
     share: "অ্যাপ শেয়ার",
     changeLang: "ভাষা",
     alert: "অনুগ্রহ করে সঠিক ধনাত্মক সংখ্যা প্রবেশ করান। সমস্যা থাকলে, আমার সাথে সরাসরি WhatsApp এ যোগাযোগ করুন: +9660581991368\n(নাম: জুনাইদ হোসেন মিরাজ)।",
@@ -81,6 +89,10 @@ const translations = {
     pairs: "أزواج",
     more: "المزيد",
     helpline: "خط المساعدة",
+    onlineShop: "المتجر الإلكتروني",
+    supportAndInfo: "الدعم والمعلومات",
+    contactDescription: "اتصل بنا مباشرة",
+    shopDescription: "متجر الأثاث الخاص بنا",
     share: "مشاركة التطبيق",
     changeLang: "اللغة",
     alert: "الرجاء إدخال أرقام موجبة صحيحة. إذا استمرت المشكلة، تواصل معي مباشرة على WhatsApp: +9660581991368\n(الاسم: زنيد حسين ميراج).",
@@ -323,7 +335,7 @@ export default function App() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-5xl flex flex-col gap-10"
+        className="w-full max-w-5xl flex flex-col gap-10 relative pt-12 sm:pt-0"
       >
         {/* Header Section */}
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
@@ -715,13 +727,31 @@ export default function App() {
           </section>
         </main>
 
-        {/* Global Footer */}
-        <footer className="flex flex-col sm:flex-row justify-between text-[10px] uppercase font-bold text-slate-400 tracking-widest border-t border-slate-200 pt-6 gap-4">
-          <span>© 2026 WIFICONNECT FABRICATION</span>
-          <div className="flex gap-6 justify-center sm:justify-end">
-            <span>Enterprise Edition</span>
-            <span className="text-primary">Precision Confirmed</span>
-          </div>
+        {/* Global Footer - Interactive Buttons */}
+        <footer className="border-t border-slate-200 pt-6 flex flex-row gap-3 sm:gap-4 justify-center items-center w-full max-w-2xl mx-auto">
+          <a
+            href="https://zunaidhosse.github.io/My-contact/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-2 sm:gap-3 px-3 py-3 sm:px-8 sm:py-4 rounded-2xl surface-card text-slate-700 hover:text-primary transition-all active:scale-[0.98] font-bold tracking-wider text-xs sm:text-sm shadow-outer border border-white/20 min-w-0"
+          >
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0">
+              <Phone className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+            </div>
+            <span className="truncate">{texts.helpline}</span>
+          </a>
+
+          <a
+            href="https://sites.google.com/view/furniture-saudi/%E0%A6%B9%E0%A6%AE"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-2 sm:gap-3 px-3 py-3 sm:px-8 sm:py-4 rounded-2xl surface-card text-slate-700 hover:text-primary transition-all active:scale-[0.98] font-bold tracking-wider text-xs sm:text-sm shadow-outer border border-white/20 min-w-0"
+          >
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0">
+              <ShoppingBag className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+            </div>
+            <span className="truncate">{texts.onlineShop}</span>
+          </a>
         </footer>
 
         {/* Hidden area for image capture */}
